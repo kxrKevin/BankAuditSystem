@@ -1,0 +1,10 @@
+
+
+CREATE TABLE AuditEntry(
+	TransactionID INT IDENTITY(1,1) PRIMARY KEY,
+	AccountID INT NOT NULL,
+	Amount Decimal(18, 2) NOT NULL,
+	TransactionType NVARCHAR(100) NOT NULL,
+	TimeStp DATETIME2 NOT NULL,
+	RowHash NVARCHAR(MAX) NOT NULL
+);
