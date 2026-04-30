@@ -31,7 +31,16 @@ using (var scope = app.Services.CreateScope())
         // 1. Manually request your AuditDAO from the DI container
         var auditDao = services.GetRequiredService<AuditDAO>();
 
-    
+        var NewEntry = new AuditEntry
+        {
+            AccountID = 42069,
+            Amount = 400.69m,
+            TransactionType = "DEPOSIT",
+            TimeStp = DateTime.Now
+        };
+
+        auditDao.InsertAuditEntry(NewEntry);
+        Console.WriteLine("Entry successfully hashed and inserted.");
 
         // 3. Execute the function
         Console.WriteLine("GETTING BALANCE...");
