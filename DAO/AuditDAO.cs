@@ -2,6 +2,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System.Data;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -24,10 +25,21 @@ namespace BankAuditSystem.DAO
             return Convert.ToHexString(hashBytes);
         }
 
+        private string ConstructHashString(int accountId, decimal amount, string type, DateTime timestamp)
+        {
+
+            return string.Format(CultureInfo.InvariantCulture,
+                "{0}|{1:F2}|{2}|{3:yyyy-MM-dd HH:mm:ss.fff}",
+                accountId, amount, type, timestamp);
+        }
+
         public void InsertAuditEntry(AuditEntry entry)
         {
 
-            string row_hash_input_string = entry.AccountID.ToString() + entry.Amount.ToString() + entry.TransactionType + entry.TimeStp.ToString();
+
+            string row_hash_input_string = ConstructHashString(entry.AccountID, entry.Amount, entry.TransactionType, entry.TimeStp);
+
+            Console.WriteLine(row_hash_input_string);
             string row_hash = RowHash(row_hash_input_string);
             
             // SQL Query that inserts
@@ -75,11 +87,11 @@ namespace BankAuditSystem.DAO
                             {
                                 continue;
                             }
-                            if (type.Equals("Withdrawal", StringComparison.OrdinalIgnoreCase))
+                            if (type.Equals("withdrawal", StringComparison.OrdinalIgnoreCase))
                             {
                                 currentBalance -= amount;
                             }
-                            else if(type.Equals("Deposit", StringComparison.OrdinalIgnoreCase))
+                            else if(type.Equals("deposit", StringComparison.OrdinalIgnoreCase))
                             {
                                 currentBalance += amount;
                             }
@@ -132,7 +144,7 @@ namespace BankAuditSystem.DAO
 
             List<int> discrepancies_List = new List<int>();
 
-            const string BalanceQuery = "SELECT TransactionID, AccountID, Amount, TransactionType, TimeStp, RowHash FROM AuditEntry;";
+            const string BalanceQuery = "SELECT AccountID, Amount, TransactionType, TimeStp, RowHash FROM AuditEntry;";
 
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
@@ -146,16 +158,20 @@ namespace BankAuditSystem.DAO
                         while (reader.Read())
                         {
 
-                            string row_hash_input_string = 
-                                reader.GetInt32(0).ToString() + 
-                                reader.GetInt32(1).ToString() + 
-                                reader.GetDecimal(2).ToString("0.00") +
-                                reader.GetString(3) +
-                                reader.GetDateTime(4).ToString("yyyy-MM-dd HH:mm:ss.fff");
+                            string verificationString = ConstructHashString(
+                                                    reader.GetInt32(0), // AccountID
+                                                    reader.GetDecimal(1), // Amount
+                                                    reader.GetString(2), // TransactionType
+                                                    reader.GetDateTime(3) // TimeStp
+                                                );
 
-                            string test_Hash = RowHash(row_hash_input_string);
+                            Console.WriteLine(reader.GetDateTime(3));
+                            Console.WriteLine(verificationString);
+                            
+                            string test_Hash = RowHash(verificationString);
+                            string row_Hash = reader.GetString(4);
 
-                            if (test_Hash != reader.GetString(5))
+                            if (test_Hash != row_Hash)
                             {
                                 discrepancies_List.Add(reader.GetInt32(0));
                             }

@@ -34,7 +34,7 @@ using (var scope = app.Services.CreateScope())
         var NewEntry = new AuditEntry
         {
             AccountID = 42069,
-            Amount = 400.69m,
+            Amount = 100m,
             TransactionType = "DEPOSIT",
             TimeStp = DateTime.Now
         };
@@ -44,8 +44,13 @@ using (var scope = app.Services.CreateScope())
 
         // 3. Execute the function
         Console.WriteLine("GETTING BALANCE...");
-        decimal balance = auditDao.GetBalance(12345);
+        decimal balance = auditDao.GetBalance(42069);
         Console.WriteLine($"Success! Your Balance is {balance}");
+
+        List<int> discreps = auditDao.Integrity_Check();
+        int numDiscreps = discreps.Count;
+
+        Console.WriteLine($"NUMBER OF ERRORS = {numDiscreps}");
 
 
     }
