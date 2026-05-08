@@ -5,6 +5,7 @@ using System.Data;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BankAuditSystem.DAO
 {
@@ -67,7 +68,7 @@ namespace BankAuditSystem.DAO
         public decimal GetBalance(int acc_Id)
         {
             decimal currentBalance = 0;
-            const string BalanceQuery = "SELECT AccountID, Amount, TransactionType FROM AuditEntry;";
+            const string BalanceQuery = "SELECT AccountID, Amount, TransactionType FROM AuditEntry WHERE AccountId = @AccountId;";
 
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
@@ -83,10 +84,6 @@ namespace BankAuditSystem.DAO
                             decimal amount = reader.GetDecimal(1); // Amount
                             string type = reader.GetString(2);
 
-                            if (account_id != acc_Id)
-                            {
-                                continue;
-                            }
                             if (type.Equals("withdrawal", StringComparison.OrdinalIgnoreCase))
                             {
                                 currentBalance -= amount;
